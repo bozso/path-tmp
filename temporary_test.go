@@ -14,7 +14,7 @@ func testTempFiles(nTries int) (err error) {
     }
 
     for ii := 0; ii < nTries; ii++ {
-        vf, err := t.Get()
+        vf, err := Create(&t)
         if err != nil {
             return err
         }
@@ -23,7 +23,7 @@ func testTempFiles(nTries int) (err error) {
             return err
         }
 
-        t.Put(vf)
+        t.Put(vf.ToFile())
     }
     return t.Remove()
 }
@@ -43,10 +43,12 @@ func withExtension(ext string, nTries int) (err error) {
     w := WithExtension{Like: &f, extension: ext}
 
     for ii := 0; ii < nTries; ii++ {
-        file, err := w.Get()
+        file, err := Create(&w)
         if err != nil {
             return err
         }
+        fmt.Printf("%s\n", file)
+        defer w.Put(file.ToFile())
 
         if fext := file.Ext(); ext != fext {
             return fmt.Errorf("expected file with extension '%s', got '%s'",
@@ -57,7 +59,7 @@ func withExtension(ext string, nTries int) (err error) {
 }
 
 func TestWithExtension(t *testing.T) {
-    err := withExtension("png", 1000000)
+    err := withExtension("png", 10)
     if err != nil {
         t.Fatalf("Error: %s\n", err)
     }
