@@ -28,10 +28,10 @@ type Files struct {
 }
 
 /*
-Set up temporary file management for the specified directory
+FromDir sets up temporary file management for the specified directory
 with the given randum number generator.
 */
-func FromDir(rootDir path.Dir, rng rand.Rand) (t Files) {
+func FromDir(rootDir path.Dir, rng rand.Rand) (f Files) {
     return Files{
         RootDir: rootDir,
         files: make(Set),
@@ -39,16 +39,16 @@ func FromDir(rootDir path.Dir, rng rand.Rand) (t Files) {
     }
 }
 
-// Set up temporary file management with default parameters. Random
-// number generator will be produced using the current unix time stamp.
+// NewDefault sets up temporary file management with default parameters.
+// random number generator will be produced using the current unix time stamp.
 func NewDefault() (f Files, err error) {
     src := rand.NewSource(time.Now().Unix())
     f, err = FromRand(rand.NoScale(src))
     return
 }
 
-// Set up temporary file management with the specified random number
-// generator. Directory name will be randomly generated using the
+// FromRand sets up temporary file management with the specified random
+// number generator. Directory name will be randomly generated using the
 // generator.
 func FromRand(rng rand.Rand) (f Files, err error) {
     prefix := fmt.Sprintf("%d", rng.Int())
@@ -67,7 +67,7 @@ func New(dir, prefix string, rng rand.Rand) (f Files, err error) {
     return
 }
 
-// Convert it to mutex guarded temporary file manager.
+// Mutexed converts to mutex guarded temporary file manager.
 func (f Files) Mutexed() (m Mutexed) {
     return Mutexed{
         files: f,
@@ -75,7 +75,7 @@ func (f Files) Mutexed() (m Mutexed) {
 }
 
 /*
-Search for a valid file that is not in use managed by the receiver.
+Search searchs for a valid file that is not in use managed by the receiver.
 The second return argument marks whether a file that is not in use was
 found.
 */
@@ -90,7 +90,7 @@ func (f *Files) Search() (vf *path.ValidFile, found bool) {
 }
 
 /*
-Retreives a new temporary file to be used.
+Get retreives a new temporary file to be used.
 First it searches for a file that is not in use. If no such file is
 found a new file will be created and registered in the receivers
 fileset.
@@ -105,8 +105,8 @@ func (f *Files) Get() (vf *path.ValidFile, err error) {
 }
 
 /*
-Creates a new file to be used in the temporary file directory. Returns
-error if file creation has failed.
+NewFile creates a new file to be used in the temporary file directory.
+Returns error if file creation has failed.
 */
 func (f *Files) NewFile() (vf *path.ValidFile, err error) {
     file := f.RootDir.Join(fmt.Sprintf("%d", f.Rand.Int()))
@@ -128,7 +128,7 @@ func (f *Files) NewFile() (vf *path.ValidFile, err error) {
 }
 
 /*
-Signals to the receiver that the temporary file is no longer in use.
+Put signals to the receiver that the temporary file is no longer in use.
 Should be used in conjunction with Get.
 
     var t = NewDefaultTempFiles()
@@ -166,7 +166,7 @@ func (e CreateFail) Unwrap() (err error) {
     return e.err
 }
 
-// Concurrent safe TempFiles, guarded by mutex
+// Mutexed is concurrent safe Files, guarded by mutex
 type Mutexed struct {
     // The wrapped struct.
     files Files
@@ -174,7 +174,7 @@ type Mutexed struct {
     mutex sync.Mutex
 }
 
-// Concurrent safe Get
+// Get retreives a tempfile to be used in a concurrent safe way.
 func (m *Mutexed) Get() (vf *path.ValidFile, err error) {
     m.mutex.Lock()
     vf, err = m.files.Get()
@@ -182,7 +182,7 @@ func (m *Mutexed) Get() (vf *path.ValidFile, err error) {
     return
 }
 
-// Concurrent safe Search
+// Search searches for a tempfile to be used in a concurrent safe way.
 func (m *Mutexed) Search() (vf *path.ValidFile, found bool) {
     m.mutex.Lock()
     vf, found = m.files.Search()
@@ -190,7 +190,7 @@ func (m *Mutexed) Search() (vf *path.ValidFile, found bool) {
     return
 }
 
-// Concurrent safe NewFile
+// NewFile creates a new tempfile to be used in a concurrent safe way.
 func (m *Mutexed) NewFile() (vf *path.ValidFile, err error) {
     m.mutex.Lock()
     vf, err = m.files.NewFile()
@@ -198,7 +198,7 @@ func (m *Mutexed) NewFile() (vf *path.ValidFile, err error) {
     return
 }
 
-// Concurrent safe Put
+// Put signals that a tempfile can be reused in a concurrent safe way.
 func (m *Mutexed) Put(vf *path.ValidFile) {
     m.mutex.Lock()
     m.files.Put(vf)
