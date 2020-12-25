@@ -31,7 +31,7 @@ type Files struct {
 Set up temporary file management for the specified directory
 with the given randum number generator.
 */
-func FilesFromDir(rootDir path.Dir, rng rand.Rand) (t Files) {
+func FromDir(rootDir path.Dir, rng rand.Rand) (t Files) {
     return Files{
         RootDir: rootDir,
         files: make(Set),
@@ -41,29 +41,29 @@ func FilesFromDir(rootDir path.Dir, rng rand.Rand) (t Files) {
 
 // Set up temporary file management with default parameters. Random
 // number generator will be produced using the current unix time stamp.
-func NewDefaultFiles() (f Files, err error) {
+func NewDefault() (f Files, err error) {
     src := rand.NewSource(time.Now().Unix())
-    f, err = FilesFromRand(rand.NoScale(src))
+    f, err = FromRand(rand.NoScale(src))
     return
 }
 
 // Set up temporary file management with the specified random number
 // generator. Directory name will be randomly generated using the
 // generator.
-func FilesFromRand(rng rand.Rand) (f Files, err error) {
+func FromRand(rng rand.Rand) (f Files, err error) {
     prefix := fmt.Sprintf("%d", rng.Int())
 
-    f, err = NewFiles("", prefix, rng)
+    f, err = New("", prefix, rng)
     return
 }
 
-func NewFiles(dir, prefix string, rng rand.Rand) (f Files, err error) {
+func New(dir, prefix string, rng rand.Rand) (f Files, err error) {
     d, err := path.TempDirIn(dir, prefix)
     if err != nil {
         return
     }
 
-    f = FilesFromDir(d, rng)
+    f = FromDir(d, rng)
     return
 }
 
