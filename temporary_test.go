@@ -48,14 +48,14 @@ func withExtension(ext string, nTries int) (err error) {
             return err
         }
         fmt.Printf("%s\n", file)
-        defer w.Put(file.ToFile())
 
         if fext := file.Ext(); ext != fext {
             return fmt.Errorf("expected file with extension '%s', got '%s'",
                 ext, fext)
         }
+        w.Put(file.ToFile())
     }
-    return
+    return w.Remove()
 }
 
 func TestWithExtension(t *testing.T) {

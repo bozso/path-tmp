@@ -17,8 +17,10 @@ const (
     NotInUse Status = false
 )
 
+type empty struct{}
+
 // Set describes whether a specific file is in use or not
-type Set map[path.File]Status
+type Set map[path.File]empty
 
 // Files is the main struct for managing temporary files in a single
 // directory.
@@ -84,15 +86,15 @@ The second return argument marks whether a file that is not in use was
 found.
 */
 func (f *Files) Search() (vf path.File, found bool) {
-    for file, inUse := range f.files {
-        if inUse != InUse {
-            vf, found = file, true
-            break
-        }
+    // get the first file not in use
+    for file := range f.files {
+        vf, found = file, true
+        break
     }
 
+    // delete returned file from the record
     if found {
-        f.files[vf] = InUse
+        delete(f.files, vf)
     }
 
     return
@@ -134,7 +136,7 @@ Should be used in conjunction with Get.
     // use f
 */
 func (f *Files) Put(vf path.File) {
-    f.files[vf] = NotInUse
+    f.files[vf] = empty{}
 }
 
 /*
