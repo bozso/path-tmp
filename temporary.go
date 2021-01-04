@@ -19,8 +19,51 @@ const (
 
 type empty struct{}
 
-// Set describes whether a specific file is in use or not
+// Set represents a set of temporary files that can be used
 type Set map[path.File]empty
+
+type Builder struct {
+    RootDir string
+    MainDir string
+    RandomNumberGenerator rand.Rand
+}
+
+func (b Builder) Build() (f Files, err error) {
+    if b.RandomNumberGenerator == nil {
+
+    }
+
+}
+
+func (b Builder) With(opts ...Option) (bb Builder) {
+    bb = b
+    for _, opt := range opts {
+        opt.ApplyToTempFiles(&bb)
+    }
+    return
+}
+
+type Option interface {
+    ApplyToTempFiles(*Builder)
+}
+
+type MainDir string
+
+func (r MainDir) ApplyToTempFiles(b *Builder) {
+    b.MainDir = string(r)
+}
+
+type RootDir string
+
+func (r RootDir) ApplyToTempFiles(b *Builder) {
+    b.RootDir = string(r)
+}
+
+type RNG rand.Rand
+
+func (r RNG) ApplyToTempFiles(b *Builder) {
+    b.RandomNumberGenerator = rand.Rand(r)
+}
 
 // Files is the main struct for managing temporary files in a single
 // directory.
